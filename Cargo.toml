@@ -8,3 +8,5 @@ edition = "2018"
 
 [dependencies]
 rand = "0.7.3"
+structopt = { version = "0.3", default-features = false }
+termion = "1.5.5"
