@@ -38,6 +38,5 @@ cargo test
 
 * Display
 * Keyboard input
-* Load Font into memory
 * More tests
 * Rewind

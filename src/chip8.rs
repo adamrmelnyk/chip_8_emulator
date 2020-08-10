@@ -24,7 +24,7 @@ impl CHIP8 {
             registers: [0; 16],
             i: 0,
             memory: [0; 4096],
-            position_in_memory: 0,
+            position_in_memory: 0x200, // We start reading at 0x200 on the COSMAC VIP though, other variants started at other memory locations apparently
             stack: [0; 16],
             stack_pointer: 0,
             keys: [false; 16],
@@ -399,16 +399,32 @@ impl CHIP8 {
 
     /// Loads the specified chip8 program into memory
     pub fn load_into_memory(&mut self, file: &str) {
-        let mut buffer = [0u8; 4096];
+        self.load_fonts();
+        let mut buffer = [0u8; 3584];
         match File::open(file) {
             Ok(mut file) => match file.read(&mut buffer[..]) {
                 Ok(_bytes) => {
-                    self.memory[0..].copy_from_slice(&buffer);
+                    self.memory[0x200..].copy_from_slice(&buffer);
                 }
                 Err(err) => eprintln!("Error reading file: {}", err),
             },
             Err(err) => eprintln!("Error opening file: {}", err),
         }
+    }
+
+    fn load_fonts(&mut self) {
+        let fonts: [u8; 80] = [
+            0xf0, 0x90, 0x90, 0x90, 0xf0, 0x20, 0x60, 0x20, 0x20, 0x70, 0xf0, 0x10, 0xf0, 0x80,
+            0xf0, 0xf0, 0x10, 0xf0, 0x10, 0xf0, 0x90, 0x90, 0xf0, 0x10, 0x10, 0xf0, 0x80, 0xf0,
+            0x10, 0xf0, 0xf0, 0x80, 0xf0, 0x90, 0xf0, 0xf0, 0x10, 0x20, 0x40, 0x40, 0xf0, 0x90,
+            0xf0, 0x90, 0xf0, 0xf0, 0x90, 0xf0, 0x10, 0xf0, 0xf0, 0x90, 0xf0, 0x90, 0x90, 0xe0,
+            0x90, 0xe0, 0x90, 0xe0, 0xf0, 0x80, 0x80, 0x80, 0xf0, 0xe0, 0x90, 0x90, 0x90, 0xe0,
+            0xf0, 0x80, 0xf0, 0x80, 0xf0, 0xf0, 0x80, 0xf0, 0x80, 0x80,
+        ];
+
+        // 0x50 is the font offset
+        // http://www.multigesture.net/articles/how-to-write-an-emulator-chip-8-interpreter/
+        self.memory[0x50..0xA0].copy_from_slice(&fonts);
     }
 
     /// Loads a specified Chip8 program into memory and then runs
@@ -624,7 +640,7 @@ fn test_set_timers() {
 }
 
 #[test]
-#[ignore] // Ignoring because this test waits for a keyboardinterrupt
+#[ignore] // Ignoring because this test waits for a keyboardinterrupt, pressing 'w' will make the test pass
 fn test_set_x_to_keypress() {
     let mut chip8 = CHIP8::new();
     chip8.load_and_run("testbin/set_x_to_key_press.chip8");
@@ -659,20 +675,20 @@ fn test_load_into_memory() {
     // Check that everything is in place
     assert_eq!(chip8.registers[0], 0);
     assert_eq!(chip8.registers[1], 0);
-    assert_eq!(chip8.memory[0x000], 0x60);
-    assert_eq!(chip8.memory[0x001], 0x05);
-    assert_eq!(chip8.memory[0x002], 0x61);
-    assert_eq!(chip8.memory[0x003], 0x0A);
-    assert_eq!(chip8.memory[0x004], 0x21);
-    assert_eq!(chip8.memory[0x005], 0x00);
-    assert_eq!(chip8.memory[0x006], 0x21);
-    assert_eq!(chip8.memory[0x007], 0x00);
-    assert_eq!(chip8.memory[0x100], 0x80);
-    assert_eq!(chip8.memory[0x101], 0x14);
-    assert_eq!(chip8.memory[0x102], 0x80);
-    assert_eq!(chip8.memory[0x103], 0x14);
-    assert_eq!(chip8.memory[0x104], 0x00);
-    assert_eq!(chip8.memory[0x105], 0xEE);
+    assert_eq!(chip8.memory[0x200], 0x60);
+    assert_eq!(chip8.memory[0x201], 0x05);
+    assert_eq!(chip8.memory[0x202], 0x61);
+    assert_eq!(chip8.memory[0x203], 0x0A);
+    assert_eq!(chip8.memory[0x204], 0x23);
+    assert_eq!(chip8.memory[0x205], 0x00);
+    assert_eq!(chip8.memory[0x206], 0x23);
+    assert_eq!(chip8.memory[0x207], 0x00);
+    assert_eq!(chip8.memory[0x300], 0x80);
+    assert_eq!(chip8.memory[0x301], 0x14);
+    assert_eq!(chip8.memory[0x302], 0x80);
+    assert_eq!(chip8.memory[0x303], 0x14);
+    assert_eq!(chip8.memory[0x304], 0x00);
+    assert_eq!(chip8.memory[0x305], 0xEE);
 
     chip8.run();
 
