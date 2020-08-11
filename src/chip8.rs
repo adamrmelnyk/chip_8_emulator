@@ -1,4 +1,4 @@
-use minifb::{Key, Scale, Window, WindowOptions};
+use minifb::{Key, Scale, Window, WindowOptions, KeyRepeat};
 use std::fs::File;
 use std::io::Read;
 
@@ -293,25 +293,25 @@ impl CHIP8 {
     /// Blocking operation that waits on a VALID key press
     fn set_keys(&mut self) {
         let mut key_pressed = false;
+        self.window.update(); // Get current state before we check
         while !key_pressed {
-            self.window.update(); // Update the window each time otherwise the state is static
-            if let Some(keys) = self.window.get_keys() {
+            if let Some(keys) = self.window.get_keys_pressed(KeyRepeat::No) {
                 for t in keys {
                     match t {
                         Key::Key1 => {
-                            self.keys[0] = true;
-                            key_pressed = true;
-                        }
-                        Key::Key2 => {
                             self.keys[1] = true;
                             key_pressed = true;
                         }
-                        Key::Key3 => {
+                        Key::Key2 => {
                             self.keys[2] = true;
                             key_pressed = true;
                         }
-                        Key::Key4 => {
+                        Key::Key3 => {
                             self.keys[3] = true;
+                            key_pressed = true;
+                        }
+                        Key::Key4 => {
+                            self.keys[12] = true;
                             key_pressed = true;
                         }
                         Key::Q => {
@@ -327,35 +327,35 @@ impl CHIP8 {
                             key_pressed = true;
                         }
                         Key::R => {
-                            self.keys[7] = true;
-                            key_pressed = true;
-                        }
-                        Key::A => {
-                            self.keys[8] = true;
-                            key_pressed = true;
-                        }
-                        Key::S => {
-                            self.keys[9] = true;
-                            key_pressed = true;
-                        }
-                        Key::D => {
-                            self.keys[10] = true;
-                            key_pressed = true;
-                        }
-                        Key::F => {
-                            self.keys[11] = true;
-                            key_pressed = true;
-                        }
-                        Key::Z => {
-                            self.keys[12] = true;
-                            key_pressed = true;
-                        }
-                        Key::X => {
                             self.keys[13] = true;
                             key_pressed = true;
                         }
-                        Key::C => {
+                        Key::A => {
+                            self.keys[7] = true;
+                            key_pressed = true;
+                        }
+                        Key::S => {
+                            self.keys[8] = true;
+                            key_pressed = true;
+                        }
+                        Key::D => {
+                            self.keys[9] = true;
+                            key_pressed = true;
+                        }
+                        Key::F => {
                             self.keys[14] = true;
+                            key_pressed = true;
+                        }
+                        Key::Z => {
+                            self.keys[10] = true;
+                            key_pressed = true;
+                        }
+                        Key::X => {
+                            self.keys[0] = true;
+                            key_pressed = true;
+                        }
+                        Key::C => {
+                            self.keys[11] = true;
                             key_pressed = true;
                         }
                         Key::V => {
@@ -366,6 +366,7 @@ impl CHIP8 {
                     };
                 }
             }
+            self.window.update(); // Update the window each time otherwise the state is static
         }
     }
 
