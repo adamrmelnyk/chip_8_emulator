@@ -1,9 +1,10 @@
 use std::fs::File;
 use std::io::Read;
-use std::io::{stdin, stdout, Write};
-use termion::event::Key;
-use termion::input::TermRead;
-use termion::raw::IntoRawMode;
+use minifb::{Window, WindowOptions, Scale, Key};
+
+
+const WIDTH: usize = 64;
+const HEIGHT: usize = 32;
 
 pub struct CHIP8 {
     registers: [u8; 16],
@@ -15,7 +16,8 @@ pub struct CHIP8 {
     keys: [bool; 16],
     delay_timer: u8,
     sound_timer: u8,
-    display: [[bool; 64]; 32],
+    display: [[bool; WIDTH]; HEIGHT],
+    window: Window,
 }
 
 impl CHIP8 {
@@ -31,6 +33,17 @@ impl CHIP8 {
             delay_timer: 0,
             sound_timer: 0,
             display: [[false; 64]; 32],
+            window: Window::new(
+                "CHIP8",
+                WIDTH,
+                HEIGHT,
+                WindowOptions {
+                    scale: Scale::X32,
+                    ..WindowOptions::default()
+                },
+            ).unwrap_or_else(|e| {
+                panic!("Error creating window: {}", e);
+            }),
         }
     }
 
@@ -277,81 +290,35 @@ impl CHIP8 {
 
     /// Reads raw stdin and records key presses
     /// Only the first key pressed is read. i.e. if '1' and '2' are both pressed, only '1' is set
+    /// Blocking operation that waits on a VALID key press
     fn set_keys(&mut self) {
-        let stdin = stdin();
-        let mut stdout = stdout().into_raw_mode().unwrap();
-        stdout.flush().unwrap();
-        for c in stdin.keys() {
-            let event = c.unwrap();
-            match event {
-                Key::Char('1') => {
-                    self.keys[0] = true;
-                    break;
+        let mut key_pressed = false;
+        while !key_pressed {
+            self.window.update(); // Update the window each time otherwise the state is static
+            self.window.get_keys().map(|keys| {
+                for t in keys {
+                    match t {
+                        Key::Key1 => { self.keys[0] = true; key_pressed = true; }
+                        Key::Key2 => { self.keys[1] = true; key_pressed = true; }
+                        Key::Key3 => { self.keys[2] = true; key_pressed = true; }
+                        Key::Key4 => { self.keys[3] = true; key_pressed = true; }
+                        Key::Q => { self.keys[4] = true; key_pressed = true; }
+                        Key::W => { self.keys[5] = true; key_pressed = true; }
+                        Key::E => { self.keys[6] = true; key_pressed = true; }
+                        Key::R => { self.keys[7] = true; key_pressed = true; }
+                        Key::A => { self.keys[8] = true; key_pressed = true; }
+                        Key::S => { self.keys[9] = true; key_pressed = true; }
+                        Key::D => { self.keys[10] = true; key_pressed = true; }
+                        Key::F => { self.keys[11] = true; key_pressed = true; }
+                        Key::Z => { self.keys[12] = true; key_pressed = true; }
+                        Key::X => { self.keys[13] = true; key_pressed = true; }
+                        Key::C => { self.keys[14] = true; key_pressed = true; }
+                        Key::V => { self.keys[15] = true; key_pressed = true; }
+                        _ => ()
+                    };
                 }
-                Key::Char('2') => {
-                    self.keys[1] = true;
-                    break;
-                }
-                Key::Char('3') => {
-                    self.keys[2] = true;
-                    break;
-                }
-                Key::Char('4') => {
-                    self.keys[3] = true;
-                    break;
-                }
-                Key::Char('q') => {
-                    self.keys[4] = true;
-                    break;
-                }
-                Key::Char('w') => {
-                    self.keys[5] = true;
-                    break;
-                }
-                Key::Char('e') => {
-                    self.keys[6] = true;
-                    break;
-                }
-                Key::Char('r') => {
-                    self.keys[7] = true;
-                    break;
-                }
-                Key::Char('a') => {
-                    self.keys[8] = true;
-                    break;
-                }
-                Key::Char('s') => {
-                    self.keys[9] = true;
-                    break;
-                }
-                Key::Char('d') => {
-                    self.keys[10] = true;
-                    break;
-                }
-                Key::Char('f') => {
-                    self.keys[11] = true;
-                    break;
-                }
-                Key::Char('z') => {
-                    self.keys[12] = true;
-                    break;
-                }
-                Key::Char('x') => {
-                    self.keys[13] = true;
-                    break;
-                }
-                Key::Char('c') => {
-                    self.keys[14] = true;
-                    break;
-                }
-                Key::Char('v') => {
-                    self.keys[15] = true;
-                    break;
-                }
-                _ => {}
-            }
+            });
         }
-        stdout.flush().unwrap();
     }
 
     /// delay_timer(Vx)

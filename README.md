@@ -36,7 +36,7 @@ cargo test
 
 ## TODO
 
-* Display
-* Keyboard input
+* Draw on the display
+* Keyboard input on each loop
 * More tests
 * Rewind
