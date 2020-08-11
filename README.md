@@ -40,3 +40,4 @@ cargo test
 * Keyboard input on each loop
 * More tests
 * Rewind
+* Window size CLI param

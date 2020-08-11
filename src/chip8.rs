@@ -1,7 +1,6 @@
+use minifb::{Key, Scale, Window, WindowOptions};
 use std::fs::File;
 use std::io::Read;
-use minifb::{Window, WindowOptions, Scale, Key};
-
 
 const WIDTH: usize = 64;
 const HEIGHT: usize = 32;
@@ -41,7 +40,8 @@ impl CHIP8 {
                     scale: Scale::X32,
                     ..WindowOptions::default()
                 },
-            ).unwrap_or_else(|e| {
+            )
+            .unwrap_or_else(|e| {
                 panic!("Error creating window: {}", e);
             }),
         }
@@ -295,29 +295,77 @@ impl CHIP8 {
         let mut key_pressed = false;
         while !key_pressed {
             self.window.update(); // Update the window each time otherwise the state is static
-            self.window.get_keys().map(|keys| {
+            if let Some(keys) = self.window.get_keys() {
                 for t in keys {
                     match t {
-                        Key::Key1 => { self.keys[0] = true; key_pressed = true; }
-                        Key::Key2 => { self.keys[1] = true; key_pressed = true; }
-                        Key::Key3 => { self.keys[2] = true; key_pressed = true; }
-                        Key::Key4 => { self.keys[3] = true; key_pressed = true; }
-                        Key::Q => { self.keys[4] = true; key_pressed = true; }
-                        Key::W => { self.keys[5] = true; key_pressed = true; }
-                        Key::E => { self.keys[6] = true; key_pressed = true; }
-                        Key::R => { self.keys[7] = true; key_pressed = true; }
-                        Key::A => { self.keys[8] = true; key_pressed = true; }
-                        Key::S => { self.keys[9] = true; key_pressed = true; }
-                        Key::D => { self.keys[10] = true; key_pressed = true; }
-                        Key::F => { self.keys[11] = true; key_pressed = true; }
-                        Key::Z => { self.keys[12] = true; key_pressed = true; }
-                        Key::X => { self.keys[13] = true; key_pressed = true; }
-                        Key::C => { self.keys[14] = true; key_pressed = true; }
-                        Key::V => { self.keys[15] = true; key_pressed = true; }
-                        _ => ()
+                        Key::Key1 => {
+                            self.keys[0] = true;
+                            key_pressed = true;
+                        }
+                        Key::Key2 => {
+                            self.keys[1] = true;
+                            key_pressed = true;
+                        }
+                        Key::Key3 => {
+                            self.keys[2] = true;
+                            key_pressed = true;
+                        }
+                        Key::Key4 => {
+                            self.keys[3] = true;
+                            key_pressed = true;
+                        }
+                        Key::Q => {
+                            self.keys[4] = true;
+                            key_pressed = true;
+                        }
+                        Key::W => {
+                            self.keys[5] = true;
+                            key_pressed = true;
+                        }
+                        Key::E => {
+                            self.keys[6] = true;
+                            key_pressed = true;
+                        }
+                        Key::R => {
+                            self.keys[7] = true;
+                            key_pressed = true;
+                        }
+                        Key::A => {
+                            self.keys[8] = true;
+                            key_pressed = true;
+                        }
+                        Key::S => {
+                            self.keys[9] = true;
+                            key_pressed = true;
+                        }
+                        Key::D => {
+                            self.keys[10] = true;
+                            key_pressed = true;
+                        }
+                        Key::F => {
+                            self.keys[11] = true;
+                            key_pressed = true;
+                        }
+                        Key::Z => {
+                            self.keys[12] = true;
+                            key_pressed = true;
+                        }
+                        Key::X => {
+                            self.keys[13] = true;
+                            key_pressed = true;
+                        }
+                        Key::C => {
+                            self.keys[14] = true;
+                            key_pressed = true;
+                        }
+                        Key::V => {
+                            self.keys[15] = true;
+                            key_pressed = true;
+                        }
+                        _ => (),
                     };
                 }
-            });
+            }
         }
     }
 
