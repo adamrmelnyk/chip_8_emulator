@@ -28,6 +28,24 @@ To run a program, use the load operation followed by the file you wish to load:
 chip_8_emulator load myChip8Prog.chip8
 ```
 
+### Keyboard
+
+The CHIP8 keyboard:
+
+| 1 | 2 | 3 | c |
+|---|---|---|---|
+| 4 | 5 | 6 | d |
+| 7 | 8 | 9 | e |
+| a | 0 | b | f |
+
+Is mapped to:
+
+| 1 | 2 | 3 | 4 |
+|---|---|---|---|
+| q | w | e | r |
+| a | s | d | f |
+| z | x | c | v |
+
 ## Testing
 
 ```sh
