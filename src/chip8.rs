@@ -1,4 +1,4 @@
-use minifb::{Key, Scale, Window, WindowOptions, KeyRepeat};
+use minifb::{Key, KeyRepeat, Scale, Window, WindowOptions};
 use std::fs::File;
 use std::io::Read;
 
@@ -63,6 +63,7 @@ impl CHIP8 {
 
             match opcode {
                 0x0000 => return,
+                0x00E0 => self.clear_screen(),
                 0x00EE => self.ret(),
                 0x1000..=0x1FFF => self.goto(nnn),
                 0x2000..=0x2FFF => self.call(nnn),
@@ -110,10 +111,17 @@ impl CHIP8 {
         }
     }
 
+    /// disp_clear()
+    fn clear_screen(&mut self) {
+        self.display = [[false; 64]; 32];
+    }
+
+    /// goto NNN;
     fn goto(&mut self, addr: u16) {
         self.position_in_memory = addr as usize;
     }
 
+    /// *(0xNNN)()
     fn call(&mut self, addr: u16) {
         let sp = self.stack_pointer;
         let stack = &mut self.stack;
@@ -127,6 +135,7 @@ impl CHIP8 {
         self.position_in_memory = addr as usize;
     }
 
+    /// return;
     fn ret(&mut self) {
         if self.stack_pointer == 0 {
             panic!("Stack underflow!");
@@ -448,6 +457,14 @@ impl CHIP8 {
         self.load_into_memory(file);
         self.run();
     }
+}
+
+#[test]
+fn test_clear_screen() {
+    let mut chip8 = CHIP8::new();
+    chip8.display[0][0] = true;
+    chip8.load_and_run("testbin/clear_screen.chip8");
+    assert_eq!(chip8.display[0][0], false);
 }
 
 #[test]
