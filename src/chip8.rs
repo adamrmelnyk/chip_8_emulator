@@ -4,6 +4,8 @@ use std::io::Read;
 
 const WIDTH: usize = 64;
 const HEIGHT: usize = 32;
+// const ON: u32 = 0xaf12e8; // Purple
+// const OFF: u32 = 0x000000; // Black
 
 pub struct CHIP8 {
     registers: [u8; 16],
@@ -692,7 +694,15 @@ fn test_add_ix() {
 fn test_set_i_sprite_addr_x() {}
 
 #[test]
-fn test_set_bcd() {}
+fn test_set_bcd() {
+    let mut chip8 = CHIP8::new();
+    chip8.i = 0x600;
+    chip8.load_and_run("testbin/set_bcd.chip8");
+
+    assert_eq!(chip8.memory[1536], 2);
+    assert_eq!(chip8.memory[1537], 3);
+    assert_eq!(chip8.memory[1538], 8);
+}
 
 #[test]
 fn test_reg_dump() {}

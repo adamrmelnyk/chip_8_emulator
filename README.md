@@ -54,7 +54,9 @@ cargo test
 
 ## TODO
 
+* Switch display to a u32 Vec so it can be used with window and update draw()
 * Draw on the display
+* Custom colour arg
 * Keyboard input on each loop
 * More tests
 * Rewind
