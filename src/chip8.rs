@@ -19,6 +19,7 @@ pub struct CHIP8 {
     sound_timer: u8,
     display: [[bool; WIDTH]; HEIGHT],
     window: Window,
+    draw_flag: bool,
 }
 
 impl CHIP8 {
@@ -46,72 +47,91 @@ impl CHIP8 {
             .unwrap_or_else(|e| {
                 panic!("Error creating window: {}", e);
             }),
+            draw_flag: false,
         }
     }
 
+    /// The main run loop: Executes instructions, draws if the draw flag is set, and sets the keys on each loop
     pub fn run(&mut self) {
         loop {
-            let op_byte1 = self.memory[self.position_in_memory] as u16;
-            let op_byte2 = self.memory[self.position_in_memory + 1] as u16;
-            let opcode = op_byte1 << 8 | op_byte2;
-
-            let x = ((opcode & 0x0F00) >> 8) as u8;
-            let y = ((opcode & 0x00F0) >> 4) as u8;
-            let nn = (opcode & 0x00FF) as u8;
-            let n = (opcode & 0x000F) as u8;
-            let nnn = opcode & 0x0FFF;
-
-            self.position_in_memory += 2;
-
-            match opcode {
-                0x0000 => return,
-                0x00E0 => self.clear_screen(),
-                0x00EE => self.ret(),
-                0x1000..=0x1FFF => self.goto(nnn),
-                0x2000..=0x2FFF => self.call(nnn),
-                0x3000..=0x3FFF => self.skip_if_equal(x, nn),
-                0x4000..=0x4FFF => self.skip_if_not_equal(x, nn),
-                0x5000..=0x5FF0 => self.skip_xy_equal(x, y),
-                0x6000..=0x6FFF => self.set_xnn(x, nn),
-                0x7000..=0x7FFF => self.add_xnn(x, nn),
-                0x8000..=0x8FFF => match n {
-                    0 => self.assign_xy(x, y),
-                    1 => self.or_xy(x, y),
-                    2 => self.and_xy(x, y),
-                    3 => self.xor_xy(x, y),
-                    4 => self.add_xy(x, y),
-                    5 => self.sub_xy(x, y),
-                    6 => self.shift_right(x),
-                    7 => self.sub_yx(x, y),
-                    14 => self.shift_left(x),
-                    _ => unimplemented!("opcode {:04x}", opcode),
-                },
-                0x9000..=0x9FF0 => self.skip_xy_not_equal(x, y),
-                0xA000..=0xAFFF => self.set_16bit_register(nnn),
-                0xB000..=0xBFFF => self.jump_nnn_plus_v0(nnn),
-                0xC000..=0xCFFF => self.rand(x, nn),
-                0xD000..=0xDFFF => self.draw(x, y, n),
-                0xE000..=0xEFFF => match nn {
-                    0x9E => self.skip_if_key_pressed(x),
-                    0xA1 => self.skip_if_key_not_pressed(x),
-                    _ => unimplemented!("opcode {:04x}", opcode),
-                },
-                0xF000..=0xFFFF => match nn {
-                    0x07 => self.set_x_to_delay_timer(x),
-                    0x0A => self.set_x_to_keypress(x),
-                    0x15 => self.set_delay_timer_to_x(x),
-                    0x18 => self.set_sound_timer_to_x(x),
-                    0x1E => self.add_ix(x),
-                    0x29 => self.set_i_sprite_addr_x(x),
-                    0x33 => self.set_bcd(x),
-                    0x55 => self.reg_dump(x),
-                    0x65 => self.reg_load(x),
-                    _ => unimplemented!("opcode {:04x}", opcode),
-                },
-                _ => unimplemented!("opcode: {:04x}", opcode),
+            if self.emulate_cycle() {
+                break;
             }
+            if self.draw_flag {
+                self.draw_graphics()
+            }
+            self.set_keys();
         }
     }
+
+    /// Loads an operation from memory and executes the operation
+    /// returns true when it loads a 0x0000 or exit operation
+    fn emulate_cycle(&mut self) -> bool {
+        let op_byte1 = self.memory[self.position_in_memory] as u16;
+        let op_byte2 = self.memory[self.position_in_memory + 1] as u16;
+        let opcode = op_byte1 << 8 | op_byte2;
+
+        let x = ((opcode & 0x0F00) >> 8) as u8;
+        let y = ((opcode & 0x00F0) >> 4) as u8;
+        let nn = (opcode & 0x00FF) as u8;
+        let n = (opcode & 0x000F) as u8;
+        let nnn = opcode & 0x0FFF;
+
+        self.position_in_memory += 2;
+
+        let mut execution_finished = false;
+        match opcode {
+            0x0000 => execution_finished = true,
+            0x00E0 => self.clear_screen(),
+            0x00EE => self.ret(),
+            0x1000..=0x1FFF => self.goto(nnn),
+            0x2000..=0x2FFF => self.call(nnn),
+            0x3000..=0x3FFF => self.skip_if_equal(x, nn),
+            0x4000..=0x4FFF => self.skip_if_not_equal(x, nn),
+            0x5000..=0x5FF0 => self.skip_xy_equal(x, y),
+            0x6000..=0x6FFF => self.set_xnn(x, nn),
+            0x7000..=0x7FFF => self.add_xnn(x, nn),
+            0x8000..=0x8FFF => match n {
+                0 => self.assign_xy(x, y),
+                1 => self.or_xy(x, y),
+                2 => self.and_xy(x, y),
+                3 => self.xor_xy(x, y),
+                4 => self.add_xy(x, y),
+                5 => self.sub_xy(x, y),
+                6 => self.shift_right(x),
+                7 => self.sub_yx(x, y),
+                14 => self.shift_left(x),
+                _ => unimplemented!("opcode {:04x}", opcode),
+            },
+            0x9000..=0x9FF0 => self.skip_xy_not_equal(x, y),
+            0xA000..=0xAFFF => self.set_16bit_register(nnn),
+            0xB000..=0xBFFF => self.jump_nnn_plus_v0(nnn),
+            0xC000..=0xCFFF => self.rand(x, nn),
+            0xD000..=0xDFFF => self.draw(x, y, n),
+            0xE000..=0xEFFF => match nn {
+                0x9E => self.skip_if_key_pressed(x),
+                0xA1 => self.skip_if_key_not_pressed(x),
+                _ => unimplemented!("opcode {:04x}", opcode),
+            },
+            0xF000..=0xFFFF => match nn {
+                0x07 => self.set_x_to_delay_timer(x),
+                0x0A => self.set_x_to_keypress(x),
+                0x15 => self.set_delay_timer_to_x(x),
+                0x18 => self.set_sound_timer_to_x(x),
+                0x1E => self.add_ix(x),
+                0x29 => self.set_i_sprite_addr_x(x),
+                0x33 => self.set_bcd(x),
+                0x55 => self.reg_dump(x),
+                0x65 => self.reg_load(x),
+                _ => unimplemented!("opcode {:04x}", opcode),
+            },
+            _ => unimplemented!("opcode: {:04x}", opcode),
+        }
+        execution_finished
+    }
+
+    /// Update the window
+    fn draw_graphics(&mut self) {}
 
     /// disp_clear()
     fn clear_screen(&mut self) {
@@ -291,7 +311,7 @@ impl CHIP8 {
 
     /// Vx = get_key()
     fn set_x_to_keypress(&mut self, x: u8) {
-        self.set_keys(); // This operations waits for input
+        self.wait_for_keypress_and_set_keys();
         for (pos, &key) in self.keys.iter().enumerate() {
             if key {
                 self.registers[x as usize] = pos as u8;
@@ -302,83 +322,89 @@ impl CHIP8 {
     /// Reads raw stdin and records key presses
     /// Only the first key pressed is read. i.e. if '1' and '2' are both pressed, only '1' is set
     /// Blocking operation that waits on a VALID key press
-    fn set_keys(&mut self) {
+    fn wait_for_keypress_and_set_keys(&mut self) {
         let mut key_pressed = false;
         self.window.update(); // Get current state before we check
         while !key_pressed {
-            if let Some(keys) = self.window.get_keys_pressed(KeyRepeat::No) {
-                for t in keys {
-                    match t {
-                        Key::Key1 => {
-                            self.keys[1] = true;
-                            key_pressed = true;
-                        }
-                        Key::Key2 => {
-                            self.keys[2] = true;
-                            key_pressed = true;
-                        }
-                        Key::Key3 => {
-                            self.keys[3] = true;
-                            key_pressed = true;
-                        }
-                        Key::Key4 => {
-                            self.keys[12] = true;
-                            key_pressed = true;
-                        }
-                        Key::Q => {
-                            self.keys[4] = true;
-                            key_pressed = true;
-                        }
-                        Key::W => {
-                            self.keys[5] = true;
-                            key_pressed = true;
-                        }
-                        Key::E => {
-                            self.keys[6] = true;
-                            key_pressed = true;
-                        }
-                        Key::R => {
-                            self.keys[13] = true;
-                            key_pressed = true;
-                        }
-                        Key::A => {
-                            self.keys[7] = true;
-                            key_pressed = true;
-                        }
-                        Key::S => {
-                            self.keys[8] = true;
-                            key_pressed = true;
-                        }
-                        Key::D => {
-                            self.keys[9] = true;
-                            key_pressed = true;
-                        }
-                        Key::F => {
-                            self.keys[14] = true;
-                            key_pressed = true;
-                        }
-                        Key::Z => {
-                            self.keys[10] = true;
-                            key_pressed = true;
-                        }
-                        Key::X => {
-                            self.keys[0] = true;
-                            key_pressed = true;
-                        }
-                        Key::C => {
-                            self.keys[11] = true;
-                            key_pressed = true;
-                        }
-                        Key::V => {
-                            self.keys[15] = true;
-                            key_pressed = true;
-                        }
-                        _ => (),
-                    };
-                }
-            }
-            self.window.update(); // Update the window each time otherwise the state is static
+            key_pressed = self.set_keys();
         }
+    }
+
+    fn set_keys(&mut self) -> bool {
+        let mut key_pressed = false;
+        if let Some(keys) = self.window.get_keys_pressed(KeyRepeat::No) {
+            for t in keys {
+                match t {
+                    Key::Key1 => {
+                        self.keys[1] = true;
+                        key_pressed = true;
+                    }
+                    Key::Key2 => {
+                        self.keys[2] = true;
+                        key_pressed = true;
+                    }
+                    Key::Key3 => {
+                        self.keys[3] = true;
+                        key_pressed = true;
+                    }
+                    Key::Key4 => {
+                        self.keys[12] = true;
+                        key_pressed = true;
+                    }
+                    Key::Q => {
+                        self.keys[4] = true;
+                        key_pressed = true;
+                    }
+                    Key::W => {
+                        self.keys[5] = true;
+                        key_pressed = true;
+                    }
+                    Key::E => {
+                        self.keys[6] = true;
+                        key_pressed = true;
+                    }
+                    Key::R => {
+                        self.keys[13] = true;
+                        key_pressed = true;
+                    }
+                    Key::A => {
+                        self.keys[7] = true;
+                        key_pressed = true;
+                    }
+                    Key::S => {
+                        self.keys[8] = true;
+                        key_pressed = true;
+                    }
+                    Key::D => {
+                        self.keys[9] = true;
+                        key_pressed = true;
+                    }
+                    Key::F => {
+                        self.keys[14] = true;
+                        key_pressed = true;
+                    }
+                    Key::Z => {
+                        self.keys[10] = true;
+                        key_pressed = true;
+                    }
+                    Key::X => {
+                        self.keys[0] = true;
+                        key_pressed = true;
+                    }
+                    Key::C => {
+                        self.keys[11] = true;
+                        key_pressed = true;
+                    }
+                    Key::V => {
+                        self.keys[15] = true;
+                        key_pressed = true;
+                    }
+                    _ => (),
+                };
+            }
+        }
+        self.window.update(); // Update the window each time otherwise the state is static
+        key_pressed
     }
 
     /// delay_timer(Vx)
