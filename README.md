@@ -1,6 +1,6 @@
 # CHIP8 Emulator
 
-A simple CHIP8 emulator written in rust. This project is currently incomplete. Though it will run a chip8 program it's missing reading keyboard instructions at each iteration as well as the display.
+A CHIP8 emulator written in rust.
 
 ## Building
 

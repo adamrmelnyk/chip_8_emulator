@@ -135,7 +135,11 @@ impl CHIP8 {
         let mut buf = Vec::new();
         for i in 0..self.display.len() {
             for j in 0..self.display[0].len() {
-                if self.display[i][j] { buf.push(ON) } else { buf.push(OFF)}
+                if self.display[i][j] {
+                    buf.push(ON)
+                } else {
+                    buf.push(OFF)
+                }
             }
         }
         self.window.update_with_buffer(&buf, WIDTH, HEIGHT).unwrap();
