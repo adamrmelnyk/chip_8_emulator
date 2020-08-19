@@ -52,10 +52,39 @@ Is mapped to:
 cargo test
 ```
 
+## Writing a program
+
+### Drawing
+
+| row | op | op | Description |
+|-----|----|----|-------------|
+| 0x200 | A2 | 06 | Set our address register to begin reading at location 206 |
+| 0x202 | D0 | 05 | Draw at (0,0), 5 bytes starting from the location in memory specified by the address register |
+| 0x204 | 00 | 00 | Halt |
+| 0x206 | FF | C3 | The bytes that will be drawn |
+| 0x208 | FF | C3 | |
+| 0x210 | 00 |    | |
+
+
+**Note that programs loaded into memory begin at location 0x200**
+
+each pixel cooresponds to a set bit
+
+```rust
+// ******** 0xFF 0b1111_1111
+// **    ** 0xC3 0b1100_0011
+// ******** 0xFF 0b1111_1111
+// **    ** 0xC3 0b1100_0011
+// **    ** 0xC3 0b1100_0011
+```
+
+```sh
+cargo build
+./target/debug/chip_8_emulator load examples/draw_a.chip8
+```
+
 ## TODO
 
-* Switch display to a u32 Vec so it can be used with window and update draw()
-* Draw on the display
 * Custom colour arg
 * More tests
 * Rewind

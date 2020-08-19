@@ -4,8 +4,8 @@ use std::io::Read;
 
 const WIDTH: usize = 64;
 const HEIGHT: usize = 32;
-// const ON: u32 = 0xaf12e8; // Purple
-// const OFF: u32 = 0x000000; // Black
+const ON: u32 = 0xaf12e8; // Purple
+const OFF: u32 = 0x000000; // Black
 
 pub struct CHIP8 {
     registers: [u8; 16],
@@ -58,7 +58,7 @@ impl CHIP8 {
                 break;
             }
             if self.draw_flag {
-                self.draw_graphics()
+                self.draw_graphics();
             }
             self.set_keys();
         }
@@ -131,7 +131,15 @@ impl CHIP8 {
     }
 
     /// Update the window
-    fn draw_graphics(&mut self) {}
+    fn draw_graphics(&mut self) {
+        let mut buf = Vec::new();
+        for i in 0..self.display.len() {
+            for j in 0..self.display[0].len() {
+                if self.display[i][j] { buf.push(ON) } else { buf.push(OFF)}
+            }
+        }
+        self.window.update_with_buffer(&buf, WIDTH, HEIGHT).unwrap();
+    }
 
     /// disp_clear()
     fn clear_screen(&mut self) {
@@ -267,27 +275,20 @@ impl CHIP8 {
 
     /// draw(Vx,Vy,N)
     fn draw(&mut self, x: u8, y: u8, n: u8) {
-        // From Wikipedia
-        // Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels.
-        // Each row of 8 pixels is read as bit-coded starting from memory location I;
-        // I value doesn’t change after the execution of this instruction. As described above,
-        // VF is set to 1 if any screen pixels are flipped from set to unset when the sprite is drawn,
-        // and to 0 if that doesn’t happen
-        let sprite = &self.memory[self.i as usize..(self.i + n as u16) as usize] as &[u8];
-        for (r, row) in sprite.iter().enumerate() {
-            for c in 0..8 {
-                let new = row >> (7 - c) & 0x01;
-                if new == 1 {
-                    let xc = (x as usize + c) % 64;
-                    let yr = (y as usize + r) % 32;
-                    let old = self.display[xc][yr];
-                    if old {
-                        self.registers[15] = 1;
-                    }
-                    self.display[xc][yr] = (new == 1) ^ old;
-                }
+        let vx = self.registers[x as usize];
+        let vy = self.registers[y as usize];
+
+        for r in 0..n {
+            let row = self.memory[(self.i + r as u16) as usize];
+            let screen_y = ((vy + r) % 32) as usize;
+            for col in 0..8 {
+                let val = (row & 0x80 >> col) > 0;
+                let screen_x = ((vx + col) % 64) as usize;
+                let new = val ^ self.display[screen_y][screen_x];
+                self.display[screen_y][screen_x] = new;
             }
         }
+        self.draw_flag = true;
     }
 
     /// if(key()==Vx)
@@ -654,7 +655,35 @@ fn test_rand() {
 
 #[test]
 fn test_draw() {
-    // TODO
+    let mut chip8 = CHIP8::new();
+    chip8.load_and_run("testbin/draw.chip8");
+
+    // Checking if we drew this:
+    //   ****
+    // **    **
+    // ********
+    assert_eq!(chip8.memory[chip8.i as usize], 0x3C);
+    assert_eq!(chip8.memory[(chip8.i + 1) as usize], 0xC3);
+    assert_eq!(chip8.memory[(chip8.i + 2) as usize], 0xFF);
+    assert_eq!(chip8.display[0][0], false);
+    assert_eq!(chip8.display[0][1], false);
+    assert_eq!(chip8.display[0][2], true);
+    assert_eq!(chip8.display[0][3], true);
+    assert_eq!(chip8.display[0][4], true);
+    assert_eq!(chip8.display[0][5], true);
+    assert_eq!(chip8.display[1][0], true);
+    assert_eq!(chip8.display[1][1], true);
+    assert_eq!(chip8.display[1][6], true);
+    assert_eq!(chip8.display[1][7], true);
+    assert_eq!(chip8.display[0][5], true);
+    assert_eq!(chip8.display[2][0], true);
+    assert_eq!(chip8.display[2][1], true);
+    assert_eq!(chip8.display[2][2], true);
+    assert_eq!(chip8.display[2][3], true);
+    assert_eq!(chip8.display[2][4], true);
+    assert_eq!(chip8.display[2][5], true);
+    assert_eq!(chip8.display[2][6], true);
+    assert_eq!(chip8.display[2][7], true);
 }
 
 #[test]
