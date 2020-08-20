@@ -20,6 +20,7 @@ pub struct CHIP8 {
     display: [[bool; WIDTH]; HEIGHT],
     window: Window,
     draw_flag: bool,
+    pub debug: bool,
 }
 
 impl CHIP8 {
@@ -48,12 +49,16 @@ impl CHIP8 {
                 panic!("Error creating window: {}", e);
             }),
             draw_flag: false,
+            debug: false,
         }
     }
 
     /// The main run loop: Executes instructions, draws if the draw flag is set, and sets the keys on each loop
     pub fn run(&mut self) {
         loop {
+            if self.debug {
+                self.wait_on_enter();
+            }
             if self.emulate_cycle() {
                 break;
             }
@@ -61,6 +66,22 @@ impl CHIP8 {
                 self.draw_graphics();
             }
             self.set_keys();
+        }
+    }
+
+    /// Loop until the enter key is pressed
+    fn wait_on_enter(&mut self) {
+        let mut key_pressed = false;
+        while !key_pressed {
+            self.window.update();
+            if let Some(keys) = self.window.get_keys_pressed(KeyRepeat::No) {
+                for t in keys {
+                    match t {
+                        Key::Enter => key_pressed = true,
+                        _ => {},
+                    }
+                }
+            }
         }
     }
 
