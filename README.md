@@ -83,6 +83,17 @@ cargo build
 ./target/debug/chip_8_emulator load examples/draw_a.chip8
 ```
 
+## Debugging
+
+![Debugging](examples/debug.gif)
+
+Debugging allows you to wait for enter to be pressed before the next operation is executed
+
+```sh
+cargo build
+./target/debug/chip_8_emulator debug examples/a_plus_a.chip8
+```
+
 ## TODO
 
 * Custom colour arg
