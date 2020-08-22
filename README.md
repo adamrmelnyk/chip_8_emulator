@@ -28,6 +28,14 @@ To run a program, use the load operation followed by the file you wish to load:
 chip_8_emulator load myChip8Prog.chip8
 ```
 
+### colors
+
+An optional arg can be used to set the color for the pixels, purple, green, blue, or red, the default is purple.
+
+```sh
+chip_8_emulator load myChip8Prog.chip8 blue
+```
+
 ### Keyboard
 
 The CHIP8 keyboard:
@@ -96,7 +104,6 @@ cargo build
 
 ## TODO
 
-* Custom colour arg
 * More tests
 * Rewind
 * Window size CLI param

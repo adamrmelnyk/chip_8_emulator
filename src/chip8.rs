@@ -1,10 +1,10 @@
 use minifb::{Key, KeyRepeat, Scale, Window, WindowOptions};
 use std::fs::File;
 use std::io::Read;
+use crate::color::Color;
 
 const WIDTH: usize = 64;
 const HEIGHT: usize = 32;
-const ON: u32 = 0xaf12e8; // Purple
 const OFF: u32 = 0x000000; // Black
 
 pub struct CHIP8 {
@@ -21,6 +21,7 @@ pub struct CHIP8 {
     window: Window,
     draw_flag: bool,
     pub debug: bool,
+    pub color: Color,
 }
 
 impl CHIP8 {
@@ -50,6 +51,7 @@ impl CHIP8 {
             }),
             draw_flag: false,
             debug: false,
+            color: Color::Purple,
         }
     }
 
@@ -157,7 +159,7 @@ impl CHIP8 {
         for i in 0..self.display.len() {
             for j in 0..self.display[0].len() {
                 if self.display[i][j] {
-                    buf.push(ON)
+                    buf.push(self.color.hex_color())
                 } else {
                     buf.push(OFF)
                 }
