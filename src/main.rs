@@ -1,5 +1,5 @@
-mod color;
 mod chip8;
+mod color;
 
 use structopt::StructOpt;
 
@@ -12,7 +12,8 @@ enum Command {
     )]
     Load {
         filename: String,
-        color: Option<color::Color>},
+        color: Option<color::Color>,
+    },
     #[structopt(
         about = "Loads and runs a program in debug mode. Waits for enter to be pressed before proceeding at each operation",
         help = "USAGE: debug myChip8Binary.chip8"
@@ -36,8 +37,8 @@ fn main() {
     let args = Command::from_args();
     match args {
         Command::Load { filename, color } => match color {
-                Some(color) => load(filename, color),
-                None => load(filename, color::Color::Purple),
+            Some(color) => load(filename, color),
+            None => load(filename, color::Color::Purple),
         },
         Command::Debug { filename } => debug(filename),
     }

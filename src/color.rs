@@ -2,7 +2,7 @@ pub enum Color {
     Purple,
     Green,
     Red,
-    Blue
+    Blue,
 }
 
 impl std::str::FromStr for Color {

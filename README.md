@@ -73,7 +73,6 @@ cargo test
 | 0x208 | FF | C3 | |
 | 0x210 | 00 |    | |
 
-
 **Note that programs loaded into memory begin at location 0x200**
 
 each pixel cooresponds to a set bit
@@ -107,3 +106,6 @@ cargo build
 * More tests
 * Rewind
 * Window size CLI param
+* Print the ops of a program out with a description
+* Second window for state in debug mode
+* Displaying last op, next op in debug

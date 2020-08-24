@@ -1,7 +1,7 @@
+use crate::color::Color;
 use minifb::{Key, KeyRepeat, Scale, Window, WindowOptions};
 use std::fs::File;
 use std::io::Read;
-use crate::color::Color;
 
 const WIDTH: usize = 64;
 const HEIGHT: usize = 32;
@@ -42,7 +42,7 @@ impl CHIP8 {
                 WIDTH,
                 HEIGHT,
                 WindowOptions {
-                    scale: Scale::X32,
+                    scale: Scale::X32, // Change this value to X16, X8 to make the pixels and window smaller
                     ..WindowOptions::default()
                 },
             )
@@ -78,10 +78,7 @@ impl CHIP8 {
             self.window.update();
             if let Some(keys) = self.window.get_keys_pressed(KeyRepeat::No) {
                 for t in keys {
-                    match t {
-                        Key::Enter => key_pressed = true,
-                        _ => {},
-                    }
+                    if let Key::Enter = t { key_pressed = true }
                 }
             }
         }
