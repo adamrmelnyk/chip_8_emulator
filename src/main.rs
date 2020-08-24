@@ -15,7 +15,12 @@ enum Command {
         color: Option<color::Color>,
     },
     #[structopt(
-        about = "Loads and runs a program in debug mode. Waits for enter to be pressed before proceeding at each operation",
+        about = "Loads and runs a program in debug mode.
+        Waits on a key to be pressed before proceeding
+        at each operation.
+        ENTER -> Proceeds to next instruction
+        ESC -> Exits the emulator
+        DELETE -> Resumes normal execution",
         help = "USAGE: debug myChip8Binary.chip8"
     )]
     Debug { filename: String },

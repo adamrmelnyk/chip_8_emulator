@@ -59,7 +59,7 @@ impl CHIP8 {
     pub fn run(&mut self) {
         loop {
             if self.debug {
-                self.wait_on_enter();
+                self.wait_on_debug_input();
             }
             if self.emulate_cycle() {
                 break;
@@ -72,13 +72,21 @@ impl CHIP8 {
     }
 
     /// Loop until the enter key is pressed
-    fn wait_on_enter(&mut self) {
+    fn wait_on_debug_input(&mut self) {
         let mut key_pressed = false;
         while !key_pressed {
             self.window.update();
             if let Some(keys) = self.window.get_keys_pressed(KeyRepeat::No) {
                 for t in keys {
-                    if let Key::Enter = t { key_pressed = true }
+                    match t {
+                        Key::Enter => { key_pressed = true },
+                        Key::Escape => { std::process::exit(0) },
+                        Key::Delete => {
+                            key_pressed = true;
+                            self.debug = false;
+                        },
+                        _ => {}
+                    }
                 }
             }
         }
