@@ -71,7 +71,7 @@ impl CHIP8 {
         }
     }
 
-    /// Loop until the enter key is pressed
+    /// Loop until a valid key is pressed
     fn wait_on_debug_input(&mut self) {
         let mut key_pressed = false;
         while !key_pressed {

@@ -94,7 +94,11 @@ cargo build
 
 ![Debugging](examples/debug.gif)
 
-Debugging allows you to wait for enter to be pressed before the next operation is executed
+Debugging allows you to wait for enter, esc, or delete to be pressed before the next operation is executed.
+
+* ENTER -> Proceeds to next instruction
+* ESC -> Exits the emulator
+* DELETE -> Resumes normal execution",
 
 ```sh
 cargo build
