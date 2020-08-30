@@ -457,7 +457,7 @@ impl CHIP8 {
 
     /// I=sprite_addr[Vx]
     fn set_i_sprite_addr_x(&mut self, x: u8) {
-        self.i = self.registers[x as usize] as u16 * 5;
+        self.i = 0x50 + 5 * (self.registers[x as usize] as u16);
     }
 
     /// set_BCD(Vx);
@@ -778,7 +778,11 @@ fn test_add_ix() {
 }
 
 #[test]
-fn test_set_i_sprite_addr_x() {}
+fn test_set_i_sprite_addr_x() {
+    let mut chip8 = CHIP8::new();
+    chip8.load_and_run("testbin/set_i_to_sprite.chip8");
+    assert_eq!(chip8.i, 130);
+}
 
 #[test]
 fn test_set_bcd() {
@@ -805,6 +809,17 @@ fn test_load_into_memory() {
     // Check that everything is in place
     assert_eq!(chip8.registers[0], 0);
     assert_eq!(chip8.registers[1], 0);
+
+    // Check the fonts
+
+    // Check for zero
+    assert_eq!(chip8.memory[0x50], 0xf0);
+    assert_eq!(chip8.memory[0x51], 0x90);
+    assert_eq!(chip8.memory[0x52], 0x90);
+    assert_eq!(chip8.memory[0x53], 0x90);
+    assert_eq!(chip8.memory[0x54], 0xf0);
+
+    // Check loaded program memory
     assert_eq!(chip8.memory[0x200], 0x60);
     assert_eq!(chip8.memory[0x201], 0x05);
     assert_eq!(chip8.memory[0x202], 0x61);
