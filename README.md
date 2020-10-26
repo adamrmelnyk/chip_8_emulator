@@ -4,7 +4,7 @@ A CHIP8 emulator written in rust.
 
 ## Building
 
-Make sure you have the latest version of Rust.
+[Make sure you have the latest version of Rust](https://www.rust-lang.org/learn/get-started).
 
 ```sh
 cargo build
@@ -73,7 +73,7 @@ cargo test
 | 0x208 | FF | C3 | |
 | 0x210 | 00 |    | |
 
-**Note that programs loaded into memory begin at location 0x200**
+**Note that programs loaded into memory begin at location 0x200, this is the default in some CHIP8 machines, though not all of them**
 
 each pixel cooresponds to a set bit
 
@@ -105,9 +105,8 @@ cargo build
 ./target/debug/chip_8_emulator debug examples/a_plus_a.chip8
 ```
 
-## TODO
+## Future Features
 
-* More tests
 * Rewind
 * Window size CLI param
 * Print the ops of a program out with a description
