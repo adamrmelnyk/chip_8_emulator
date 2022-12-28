@@ -10,6 +10,10 @@ A CHIP8 emulator written in rust.
 cargo build
 ```
 
+### Troubleshooting
+
+If you're running linux, you may need to install `libwayland-dev`
+
 ## Running
 
 This emulator reads binary files written with chip8 operations. A program might look something like this:
