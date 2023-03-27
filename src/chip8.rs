@@ -76,19 +76,17 @@ impl CHIP8 {
         let mut key_pressed = false;
         while !key_pressed {
             self.window.update();
-            if let Some(keys) = self.window.get_keys_pressed(KeyRepeat::No) {
-                for t in keys {
-                    match t {
-                        Key::Enter => { key_pressed = true },
-                        Key::Escape => { std::process::exit(0) },
-                        Key::Delete => {
-                            key_pressed = true;
-                            self.debug = false;
-                        },
-                        _ => {}
-                    }
+            self.window.get_keys_pressed(KeyRepeat::No).iter().for_each(|key|
+                match key {
+                    Key::Enter => { key_pressed = true },
+                    Key::Escape => { std::process::exit(0) },
+                    Key::Delete => {
+                        key_pressed = true;
+                        self.debug = false;
+                    },
+                    _ => {}
                 }
-            }
+            );
         }
     }
 
@@ -235,7 +233,7 @@ impl CHIP8 {
 
     /// Vx += NN
     fn add_xnn(&mut self, x: u8, nn: u8) {
-        self.registers[x as usize] += nn;
+        self.registers[x as usize] = (self.registers[x as usize] as u16 + nn as u16) as u8;
     }
 
     /// Vx=Vy
@@ -260,7 +258,12 @@ impl CHIP8 {
 
     /// Vx += Vy
     fn add_xy(&mut self, x: u8, y: u8) {
-        self.registers[x as usize] += self.registers[y as usize];
+        let vx = self.registers[x as usize] as u16;
+        let vy: u16 = self.registers[y as usize] as u16;
+        let result = vx + vy;
+        // Set the carry
+        self.memory[0x0f] = if result > 0xFF { 1 } else { 0 };
+        self.registers[x as usize] = result as u8;
     }
 
     /// Vx -= Vy
@@ -275,7 +278,9 @@ impl CHIP8 {
 
     /// Vx=Vy-Vx
     fn sub_yx(&mut self, x: u8, y: u8) {
-        self.registers[x as usize] = self.registers[y as usize] - self.registers[x as usize];
+        // Set the carry
+        self.memory[0x0f] = if self.registers[y as usize] > self.registers[x as usize] { 1 } else { 0 };
+        self.registers[x as usize] = self.registers[y as usize].wrapping_sub(self.registers[x as usize]);
     }
 
     /// Vx<<=1
@@ -365,77 +370,75 @@ impl CHIP8 {
 
     fn set_keys(&mut self) -> bool {
         let mut key_pressed = false;
-        if let Some(keys) = self.window.get_keys_pressed(KeyRepeat::No) {
-            for t in keys {
-                match t {
-                    Key::Key1 => {
-                        self.keys[1] = true;
-                        key_pressed = true;
-                    }
-                    Key::Key2 => {
-                        self.keys[2] = true;
-                        key_pressed = true;
-                    }
-                    Key::Key3 => {
-                        self.keys[3] = true;
-                        key_pressed = true;
-                    }
-                    Key::Key4 => {
-                        self.keys[12] = true;
-                        key_pressed = true;
-                    }
-                    Key::Q => {
-                        self.keys[4] = true;
-                        key_pressed = true;
-                    }
-                    Key::W => {
-                        self.keys[5] = true;
-                        key_pressed = true;
-                    }
-                    Key::E => {
-                        self.keys[6] = true;
-                        key_pressed = true;
-                    }
-                    Key::R => {
-                        self.keys[13] = true;
-                        key_pressed = true;
-                    }
-                    Key::A => {
-                        self.keys[7] = true;
-                        key_pressed = true;
-                    }
-                    Key::S => {
-                        self.keys[8] = true;
-                        key_pressed = true;
-                    }
-                    Key::D => {
-                        self.keys[9] = true;
-                        key_pressed = true;
-                    }
-                    Key::F => {
-                        self.keys[14] = true;
-                        key_pressed = true;
-                    }
-                    Key::Z => {
-                        self.keys[10] = true;
-                        key_pressed = true;
-                    }
-                    Key::X => {
-                        self.keys[0] = true;
-                        key_pressed = true;
-                    }
-                    Key::C => {
-                        self.keys[11] = true;
-                        key_pressed = true;
-                    }
-                    Key::V => {
-                        self.keys[15] = true;
-                        key_pressed = true;
-                    }
-                    _ => (),
-                };
+        self.window.get_keys_pressed(KeyRepeat::No).iter().for_each(|key|
+            match key {
+                Key::Key1 => {
+                    self.keys[1] = true;
+                    key_pressed = true;
+                }
+                Key::Key2 => {
+                    self.keys[2] = true;
+                    key_pressed = true;
+                }
+                Key::Key3 => {
+                    self.keys[3] = true;
+                    key_pressed = true;
+                }
+                Key::Key4 => {
+                    self.keys[12] = true;
+                    key_pressed = true;
+                }
+                Key::Q => {
+                    self.keys[4] = true;
+                    key_pressed = true;
+                }
+                Key::W => {
+                    self.keys[5] = true;
+                    key_pressed = true;
+                }
+                Key::E => {
+                    self.keys[6] = true;
+                    key_pressed = true;
+                }
+                Key::R => {
+                    self.keys[13] = true;
+                    key_pressed = true;
+                }
+                Key::A => {
+                    self.keys[7] = true;
+                    key_pressed = true;
+                }
+                Key::S => {
+                    self.keys[8] = true;
+                    key_pressed = true;
+                }
+                Key::D => {
+                    self.keys[9] = true;
+                    key_pressed = true;
+                }
+                Key::F => {
+                    self.keys[14] = true;
+                    key_pressed = true;
+                }
+                Key::Z => {
+                    self.keys[10] = true;
+                    key_pressed = true;
+                }
+                Key::X => {
+                    self.keys[0] = true;
+                    key_pressed = true;
+                }
+                Key::C => {
+                    self.keys[11] = true;
+                    key_pressed = true;
+                }
+                Key::V => {
+                    self.keys[15] = true;
+                    key_pressed = true;
+                }
+                _ => {},
             }
-        }
+        );
         self.window.update(); // Update the window each time otherwise the state is static
         key_pressed
     }
