@@ -6,6 +6,7 @@ use std::io::Read;
 const WIDTH: usize = 64;
 const HEIGHT: usize = 32;
 const OFF: u32 = 0x000000; // Black
+const VF: usize = 0x0f;
 
 pub struct CHIP8 {
     registers: [u8; 16],
@@ -262,29 +263,32 @@ impl CHIP8 {
         let vy: u16 = self.registers[y as usize] as u16;
         let result = vx + vy;
         // Set the carry
-        self.memory[0x0f] = if result > 0xFF { 1 } else { 0 };
+        self.memory[VF] = if result > 0xFF { 1 } else { 0 };
         self.registers[x as usize] = result as u8;
     }
 
     /// Vx -= Vy
     fn sub_xy(&mut self, x: u8, y: u8) {
+        self.memory[VF] = if self.memory[x as usize] > self.memory[y as usize] { 1 } else { 0 };
         self.registers[x as usize] -= self.registers[y as usize];
     }
 
     /// Vx>>=1
     fn shift_right(&mut self, x: u8) {
+        self.memory[VF] = self.memory[x as usize] & 1;
         self.registers[x as usize] >>= 1;
     }
 
     /// Vx=Vy-Vx
     fn sub_yx(&mut self, x: u8, y: u8) {
         // Set the carry
-        self.memory[0x0f] = if self.registers[y as usize] > self.registers[x as usize] { 1 } else { 0 };
+        self.memory[VF] = if self.registers[y as usize] > self.registers[x as usize] { 1 } else { 0 };
         self.registers[x as usize] = self.registers[y as usize].wrapping_sub(self.registers[x as usize]);
     }
 
     /// Vx<<=1
     fn shift_left(&mut self, x: u8) {
+        self.memory[VF] = (self.memory[x as usize] & 0b10000000) >> 7;
         self.registers[x as usize] <<= 1;
     }
 
@@ -314,15 +318,17 @@ impl CHIP8 {
     fn draw(&mut self, x: u8, y: u8, n: u8) {
         let vx = self.registers[x as usize];
         let vy = self.registers[y as usize];
-
+        self.memory[VF] = 0;
         for r in 0..n {
             let row = self.memory[(self.i + r as u16) as usize];
             let screen_y = ((vy + r) % 32) as usize;
             for col in 0..8 {
                 let val = (row & 0x80 >> col) > 0;
                 let screen_x = ((vx + col) % 64) as usize;
-                let new = val ^ self.display[screen_y][screen_x];
-                self.display[screen_y][screen_x] = new;
+                if val & self.display[screen_y][screen_x] != self.display[screen_y][screen_x] {
+                    self.memory[VF] = 1;
+                }
+                self.display[screen_y][screen_x] ^= val;
             }
         }
         self.draw_flag = true;
