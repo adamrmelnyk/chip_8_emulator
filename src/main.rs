@@ -8,7 +8,7 @@ use structopt::StructOpt;
 enum Command {
     #[structopt(
         about = "Loads and runs a program",
-        help = "USAGE: load <optional-color> myChip8Binary.chip8"
+        help = "USAGE: load myChip8Binary.chip8 <optional-color>"
     )]
     Load {
         filename: String,
